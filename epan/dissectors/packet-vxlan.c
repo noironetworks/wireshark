@@ -30,6 +30,7 @@
 #include <epan/packet.h>
 
 #define UDP_PORT_VXLAN  4789
+#define UDP_PORT_VXLAN1 8472
 
 void proto_register_vxlan(void);
 void proto_reg_handoff_vxlan(void);
@@ -45,14 +46,22 @@ static int hf_vxlan_flag_i = -1;
 static int hf_vxlan_flag_b2 = -1;
 static int hf_vxlan_flag_b1 = -1;
 static int hf_vxlan_flag_b0 = -1;
-static int hf_vxlan_reserved_24 = -1;
 static int hf_vxlan_vni = -1;
 static int hf_vxlan_reserved_8 = -1;
-
+static int hf_vxlan_gbp_flags = -1;
+static int hf_vxlan_gbp_flag_b7 = -1;
+static int hf_vxlan_gbp_flag_b6 = -1;
+static int hf_vxlan_gbp_flag_b5 = -1;
+static int hf_vxlan_gbp_flag_b4 = -1;
+static int hf_vxlan_gbp_flag_b3 = -1;
+static int hf_vxlan_gbp_flag_b2 = -1;
+static int hf_vxlan_gbp_flag_b1 = -1;
+static int hf_vxlan_gbp_flag_b0 = -1;
+static int hf_vxlan_gbp_id = -1;
 
 static int ett_vxlan = -1;
 static int ett_vxlan_flgs = -1;
-
+static int ett_vxlan_gbp_flgs = -1;
 
 static dissector_handle_t eth_handle;
 
@@ -100,8 +109,21 @@ dissect_vxlan(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     proto_tree_add_item(flg_tree, hf_vxlan_flag_b0, tvb, offset, 1, ENC_BIG_ENDIAN);
     offset++;
 
-    proto_tree_add_item(vxlan_tree, hf_vxlan_reserved_24, tvb, offset, 3, ENC_BIG_ENDIAN);
-    offset+=3;
+    flg_item = proto_tree_add_item(vxlan_tree, hf_vxlan_gbp_flags, tvb, offset, 1, ENC_BIG_ENDIAN);
+    flg_tree  = proto_item_add_subtree(flg_item, ett_vxlan_gbp_flgs);
+
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b7, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b6, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b5, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b4, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b3, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b2, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b1, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item(flg_tree, hf_vxlan_gbp_flag_b0, tvb, offset, 1, ENC_BIG_ENDIAN);
+    offset++;
+
+    proto_tree_add_item(vxlan_tree, hf_vxlan_gbp_id, tvb, offset, 2, ENC_BIG_ENDIAN);
+    offset+=2;
 
     proto_tree_add_item(vxlan_tree, hf_vxlan_vni, tvb, offset, 3, ENC_BIG_ENDIAN);
     offset+=3;
@@ -128,7 +150,7 @@ proto_register_vxlan(void)
           },
         },
         { &hf_vxlan_flag_b7,
-          { "Reserved(R)", "vxlan.flag_b7",
+          { "GBP Nonce Present", "vxlan.flag_b7",
             FT_BOOLEAN, 8, NULL, 0x80,
             NULL, HFILL,
           },
@@ -175,9 +197,63 @@ proto_register_vxlan(void)
             NULL, HFILL,
           },
         },
-        { &hf_vxlan_reserved_24,
-          { "Reserved", "vxlan.reserved24",
-            FT_UINT24, BASE_HEX, NULL, 0x00,
+        { &hf_vxlan_gbp_flags,
+          { "GBP Flags", "vxlan.gbp_flags",
+            FT_UINT8, BASE_HEX, NULL, 0x00,
+            NULL, HFILL
+          },
+        },
+        { &hf_vxlan_gbp_flag_b7,
+          { "Reserved(R)", "vxlan.gbpflag_b7",
+            FT_BOOLEAN, 8, NULL, 0x80,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b6,
+          { "GBP Dont Learn", "vxlan.gbpflag_b6",
+            FT_BOOLEAN, 8, NULL, 0x40,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b5,
+          { "Reserved(R)", "vxlan.gbpflag_b5",
+            FT_BOOLEAN, 8, NULL, 0x20,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b4,
+          { "Reserved(R)", "vxlan.gbpflag_b4",
+            FT_BOOLEAN, 8, NULL, 0x10,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b3,
+          { "GBP Policy Applied", "vxlan.gbpflag_b3",
+            FT_BOOLEAN, 8, NULL, 0x08,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b2,
+          { "Reserved(R)", "vxlan.gbpflag_b2",
+            FT_BOOLEAN, 8, NULL, 0x04,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b1,
+          { "Reserved(R)", "vxlan.gbpflag_b1",
+            FT_BOOLEAN, 8, NULL, 0x02,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_flag_b0,
+          { "Reserved(R)", "vxlan.gbpflag_b0",
+            FT_BOOLEAN, 8, NULL, 0x01,
+            NULL, HFILL,
+          },
+        },
+        { &hf_vxlan_gbp_id,
+          { "GBP Policy ID", "vxlan.gbp_policy_id",
+            FT_UINT16, BASE_HEX, NULL, 0x00,
             NULL, HFILL
           },
         },
@@ -199,6 +275,7 @@ proto_register_vxlan(void)
     static gint *ett[] = {
         &ett_vxlan,
         &ett_vxlan_flgs,
+        &ett_vxlan_gbp_flgs,
     };
 
     /* Register the protocol name and description */
@@ -221,6 +298,8 @@ proto_reg_handoff_vxlan(void)
 
     vxlan_handle = create_dissector_handle(dissect_vxlan, proto_vxlan);
     dissector_add_uint("udp.port", UDP_PORT_VXLAN, vxlan_handle);
+    dissector_add_for_decode_as("udp.port", vxlan_handle);
+    dissector_add_uint("udp.port", UDP_PORT_VXLAN1, vxlan_handle);
     dissector_add_for_decode_as("udp.port", vxlan_handle);
 
 }
